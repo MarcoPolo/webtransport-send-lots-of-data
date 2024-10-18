@@ -20,6 +20,8 @@ import (
 
 	"github.com/quic-go/quic-go/http3"
 
+	"github.com/quic-go/quic-go"
+	"github.com/quic-go/quic-go/qlog"
 	"github.com/quic-go/webtransport-go"
 )
 
@@ -38,8 +40,11 @@ func main() {
 	s := webtransport.Server{
 		H3: http3.Server{
 			TLSConfig: tlsConf,
-			Addr:      "localhost:12345",
-			Handler:   wmux,
+			QUICConfig: &quic.Config{
+				Tracer: qlog.DefaultConnectionTracer,
+			},
+			Addr:    "localhost:12345",
+			Handler: wmux,
 		},
 		CheckOrigin: func(r *http.Request) bool { return true },
 	}
@@ -69,7 +74,7 @@ func main() {
 		log.Printf("SERVER says hello")
 
 		for i := 0; i < 256; i++ {
-			if _, err = stream.Write(make([]byte, 1024 * 1024)); err != nil {
+			if _, err = stream.Write(make([]byte, 1024*1024)); err != nil {
 				log.Fatal(err)
 			}
 		}
